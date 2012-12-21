@@ -28,6 +28,7 @@ public:
 	int greedyAlgorithm();
 	void backtrackAlgorithm(unsigned int nbColors);
 	void nochoiceAlgorithm(int nbColors);
+	void satReduc(unsigned int nbColors);
 	std::vector<Vertex*> searchClique();
 	void colorCliqueAndNeighbors(std::vector<Vertex*> clique);
 	void coloringOneColorLeftVertices();

@@ -13,7 +13,10 @@ int main() {
 	std::cout << graph << std::endl;
 
 	ColorationEngine ce = ColorationEngine(&graph);
-	ce.nochoiceAlgorithm(4);
+
+	//ce.nochoiceAlgorithm(4);
+	ce.satReduc(3);
+
 
 	//int usedColors = ce.greedyAlgorithm();
 	//std::cout << "nombre de couleurs utilisées : " << usedColors << std::endl;

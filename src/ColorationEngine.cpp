@@ -7,8 +7,8 @@
 
 #include "ColorationEngine.h"
 #include <set>
-
-using namespace std;
+#include <fstream>
+#include <sstream>
 
 ColorationEngine::ColorationEngine(Graph* graph):
 		verticesSet(graph->getVertices()),
@@ -368,5 +368,74 @@ bool ColorationEngine::vertexStackContains(std::stack<Vertex*> s, Vertex* v)
 }
 
 
+std::string toString(const int nb)
+{
+   std::ostringstream oss;
+   oss << nb;
+   return oss.str();
+}
 
+void ColorationEngine::satReduc(unsigned int nbColors)
+{
+
+
+	// Variable : num_color + num_vertex
+
+	std::ofstream fichier("test.txt", std::ios::out | std::ios::trunc);
+
+	if(fichier)
+	{
+			fichier << "p cnf" << std::endl;
+
+			//Chaque sommet a au moins une couleur
+			for (unsigned int i = 0; i < this->verticesSet.size() ; ++i)
+			{
+				std::string clause;
+				for(unsigned int j = 1; j <= nbColors; ++j)
+				{
+					clause += toString(j) + toString(this->verticesSet[i]->getId()) + " ";
+				}
+
+				fichier << clause << "0" << std::endl;
+			}
+
+			//Chaque sommet a au plus une couleur
+			for (unsigned int i = 0; i < this->verticesSet.size(); ++i)
+			{
+				unsigned int colorExept = 1;
+				for(unsigned int j = 1; j <= nbColors; ++j)
+				{
+					std::string clause;
+					for(unsigned int k = 1; k <= nbColors; ++k)
+					{
+						if(k != colorExept)
+						{
+							clause += "-" + toString(k) + toString(this->verticesSet[i]->getId()) + " ";
+						}
+					}
+					fichier << clause << "0" << std::endl;
+					++colorExept;
+				}
+			}
+
+			//Deux sommets voisins ne comportent pas la même couleur
+			for (unsigned int i = 0; i < this->verticesSet.size(); ++i)
+			{
+				for(unsigned int j = 0; j < this->verticesSet[i]->getNeighbors().size(); ++j)
+				{
+					for(unsigned int k = 1; k <= nbColors; ++k)
+					{
+						std::string clause = "-" + toString(k) + toString(this->verticesSet[i]->getId()) +
+								" -" + toString(k) + toString(this->verticesSet[i]->getNeighbors()[j]->getId()) + " 0";
+						fichier << clause << std::endl;
+					}
+				}
+			}
+
+			fichier.close();
+	}
+	else
+		std::cerr << "Impossible d'ouvrir le fichier !" << std::endl;
+
+}
 
