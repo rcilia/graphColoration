@@ -26,6 +26,7 @@ public:
 
 	void generateRandomGraph(int nb_vertices, int prob);
 	void generateRandomKcoloriableGraph(int nb_vertices, int prob, int chrom);
+	void exportGraph();
 	const std::vector<Vertex*>& getVertices() const;
 	void setVertices(const std::vector<Vertex*>& vertices);
 	void show();

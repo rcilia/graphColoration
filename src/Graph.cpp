@@ -181,6 +181,26 @@ void Graph::generateRandomKcoloriableGraph(int nb_vertices, int prob, int chrom)
 	}
 }
 
+void Graph::exportGraph()
+{
+	std::ofstream fichier("graph.txt", std::ios::out | std::ios::trunc);
+
+	fichier << this->vertices.size() << std::endl;
+	for (unsigned int i = 0; i < this->vertices.size() ; ++i)
+	{
+		fichier << this->vertices[i]->getId() << ": ";
+
+		for(unsigned int j = 0; j < this->vertices[i]->getNeighbors().size(); ++j)
+		{
+			fichier << this->vertices[i]->getNeighbors()[j]->getId() << " ";
+		}
+		fichier << std::endl;
+	}
+
+	fichier.close();
+}
+
+
 
 std::ostream& operator <<(std::ostream& stream, const Graph & obj)
 {

@@ -9,6 +9,8 @@ int main() {
 	Graph graph = Graph();
 	graph.generateRandomKcoloriableGraph(4, 50, 4);
 
+	graph.exportGraph();
+
 	std::cout << "avant : " << std::endl;
 	std::cout << graph << std::endl;
 
