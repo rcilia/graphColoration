@@ -4,10 +4,23 @@
 
 int main() {
 
-	//Graph graph = Graph("tests/graphe1");
+	/*
+	 * Tests
+	 *
+	Tests tests = Tests();
 
-	Graph graph = Graph();
-	graph.generateRandomKcoloriableGraph(4, 50, 4);
+	tests.testGreedyAlgorithmWithGivenData();
+	//tests.testGreedyAlgorithmWithGeneratedGraph();
+	tests.testBacktrackAlgorithmWithGivenData();
+	tests.testNoChoiceAlgorithmWithGivenData();
+
+
+	std::cout << "fini ! " << std::endl ;*/
+
+	Graph graph = Graph("tests/graphe12");
+
+	//Graph graph = Graph();
+	//graph.generateRandomKcoloriableGraph(4, 50, 4);
 
 	graph.exportGraph();
 
@@ -16,8 +29,8 @@ int main() {
 
 	ColorationEngine ce = ColorationEngine(&graph);
 
-	//ce.nochoiceAlgorithm(4);
-	ce.satReduc(3);
+	ce.nochoiceAlgorithm(10);
+	//ce.satReduc(3);
 
 
 	//int usedColors = ce.greedyAlgorithm();
