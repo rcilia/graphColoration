@@ -26,16 +26,19 @@ public:
 	virtual ~ColorationEngine();
 
 	int greedyAlgorithm();
-	void backtrackAlgorithm(unsigned int nbColors);
-	void nochoiceAlgorithm(int nbColors);
+	bool backtrackAlgorithm(unsigned int nbColors);
+	int nochoiceAlgorithm(int nbColors);
 	void satReduc(unsigned int nbColors);
 	void colorFromSat(unsigned int nbColors, std::string filePath);
 	std::vector<Vertex*> searchClique();
-	void colorCliqueAndNeighbors(std::vector<Vertex*> clique);
-	void coloringOneColorLeftVertices();
+	int colorCliqueAndNeighbors(std::vector<Vertex*> clique);
+	int coloringOneColorLeftVertices();
 	Vertex* getHighestDegreeVertex(std::vector<Vertex*> vertices);
 	int getNextColor();
 	bool vertexStackContains(std::stack<Vertex*> s, Vertex* v);
+	bool vertexVectorContains(std::vector<Vertex*> vector, Vertex* v);
+	void retainAll(std::vector<Vertex*>& vector, std::vector<Vertex*> toRetain);
+	void removeAll(std::vector<Vertex*>& vector, std::vector<Vertex*> toRemove);
 };
 
 #endif /* COLORATIONENGINE_H_ */

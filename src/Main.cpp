@@ -4,11 +4,32 @@
 
 int main() {
 
-	//Graph graph = Graph("tests/graphe1");
+	/*
+	 * Tests
+	 *
+	Tests tests = Tests();
 
+<<<<<<< HEAD
 	Graph graph = Graph();
 	//Graph graph = Graph("graph.txt");
 	graph.generateRandomKcoloriableGraph(15, 50, 10);
+=======
+	tests.testGreedyAlgorithmWithGivenData();
+	//tests.testGreedyAlgorithmWithGeneratedGraph();
+	tests.testBacktrackAlgorithmWithGivenData();
+	tests.testNoChoiceAlgorithmWithGivenData();
+>>>>>>> refs/remotes/origin/master
+
+<<<<<<< HEAD
+=======
+
+	std::cout << "fini ! " << std::endl ;*/
+
+	//Graph graph = Graph("tests/graphe10");
+
+	//Graph graph = Graph();
+	Graph graph = Graph("graph.txt");
+	//graph.generateRandomKcoloriableGraph(14, 50, 10);
 
 	//graph.exportGraph();
 
@@ -17,15 +38,18 @@ int main() {
 
 	ColorationEngine ce = ColorationEngine(&graph);
 
-	//ce.nochoiceAlgorithm(4);
-	ce.satReduc(10);
-	//ce.colorFromSat(10, "output.txt");
+	//int coloredVertices = ce.nochoiceAlgorithm(4);
+
+	//ce.satReduc(10);
+	ce.colorFromSat(10, "output.txt");
 
 	//int usedColors = ce.greedyAlgorithm();
 	//std::cout << "nombre de couleurs utilisées : " << usedColors << std::endl;
 
 	std::cout << "après : " << std::endl;
 	std::cout << graph << std::endl;
+
+	//std::cout << "Sommets coloriés : " << coloredVertices << std::endl;
 
 	/*Graph graph = Graph();
 	graph.generateRandomKcoloriableGraph(4, 75, 4);
