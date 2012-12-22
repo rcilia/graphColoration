@@ -9,6 +9,8 @@
 #include <set>
 #include <fstream>
 #include <sstream>
+#include <iostream>
+#include <stdlib.h>
 
 ColorationEngine::ColorationEngine(Graph* graph):
 		verticesSet(graph->getVertices()),
@@ -367,7 +369,6 @@ bool ColorationEngine::vertexStackContains(std::stack<Vertex*> s, Vertex* v)
 	return contains;
 }
 
-
 std::string toString(const int nb)
 {
    std::ostringstream oss;
@@ -377,56 +378,120 @@ std::string toString(const int nb)
 
 void ColorationEngine::satReduc(unsigned int nbColors)
 {
+	// Une variable est composé du numéro de couleur et de l'identidiant du sommet
+	// L'identifiant du sommet doit être compris entre 0 et 999 et est écrit sur 3 chiffres, ce qui permet
+	// de pouvoir extraire le numéro de la couleur et l'identifiant du sommet simplement
 
+	// La négation d'une variable est écrite avec le préfixe -
 
-	// Variable : num_color + num_vertex
-
+	// On crée le fichier test.txt qui comportera les formules
 	std::ofstream fichier("test.txt", std::ios::out | std::ios::trunc);
 
 	if(fichier)
 	{
 			fichier << "p cnf" << std::endl;
+			fichier << std::endl;
+			fichier << "c ************************************************" << std::endl;
+			fichier << "c ***** Chaque sommet a au moins une couleur *****" << std::endl;
+			fichier << "c ************************************************" << std::endl;
 
-			//Chaque sommet a au moins une couleur
+			// Formule 1 : Chaque sommet a au moins une couleur
 			for (unsigned int i = 0; i < this->verticesSet.size() ; ++i)
 			{
+				fichier << "c ** Sommet " << this->verticesSet[i]->getId() << " **" << std::endl;
 				std::string clause;
 				for(unsigned int j = 1; j <= nbColors; ++j)
 				{
-					clause += toString(j) + toString(this->verticesSet[i]->getId()) + " ";
+					// chaque numéro de couleur doit être codé avec le même nombre de chiffres.
+					// Si 0 < nbColors < 10 : la couleur numéro 3 sera codée 3
+					// Si 10 < nbColors < 100 : la couleur numéro 3 sera codée 03
+					// Si 100 < nbColors < 1000 : la couleur numéro 3 sera codée 003
+					// ...
+					std::string prefixNumColors;
+					for(int k = 0; k < (toString(nbColors).length() - toString(j).length()); ++k)
+					{
+						prefixNumColors += "0";
+					}
+
+					// Chaque identifiant de sommet doit être codé avec 3 chiffres.
+					// Le sommet 3 sera codé 003
+					std::string prefixNumVertex;
+					for(int k = 0; k < (3 - toString(this->verticesSet[i]->getId()).length()); ++k)
+					{
+						prefixNumVertex += "0";
+					}
+
+					clause += prefixNumColors + toString(j) + prefixNumVertex + toString(this->verticesSet[i]->getId()) + " ";
+
 				}
 
+				// Chaque clause doit se terminer par 0 pour Minisat
 				fichier << clause << "0" << std::endl;
 			}
+			fichier << std::endl;
+			fichier << "c ***********************************************" << std::endl;
+			fichier << "c ***** Chaque sommet a au plus une couleur *****" << std::endl;
+			fichier << "c ***********************************************" << std::endl;
 
-			//Chaque sommet a au plus une couleur
+			// Formule 2 : Chaque sommet a au plus une couleur
 			for (unsigned int i = 0; i < this->verticesSet.size(); ++i)
 			{
+				fichier << "c ** Sommet " << this->verticesSet[i]->getId() << " **" << std::endl;
+
 				unsigned int colorExept = 1;
 				for(unsigned int j = 1; j <= nbColors; ++j)
 				{
 					std::string clause;
 					for(unsigned int k = 1; k <= nbColors; ++k)
 					{
+						std::string prefixNumColors;
+						for(int l = 0; l < (toString(nbColors).length() - toString(k).length()); ++l)
+						{
+							prefixNumColors += "0";
+						}
+
+						std::string prefixNumVertex;
+						for(int l = 0; l < (3 - toString(this->verticesSet[i]->getId()).length()); ++l)
+						{
+							prefixNumVertex += "0";
+						}
+
 						if(k != colorExept)
 						{
-							clause += "-" + toString(k) + toString(this->verticesSet[i]->getId()) + " ";
+							clause += "-" + prefixNumColors + toString(k) + prefixNumVertex + toString(this->verticesSet[i]->getId()) + " ";
 						}
 					}
 					fichier << clause << "0" << std::endl;
 					++colorExept;
 				}
 			}
+			fichier << std::endl;
+			fichier << "c ******************************************************************" << std::endl;
+			fichier << "c ***** Deux sommets voisins ne comportent pas la même couleur *****" << std::endl;
+			fichier << "c ******************************************************************" << std::endl;
 
-			//Deux sommets voisins ne comportent pas la même couleur
+			//Formule 3 : Deux sommets voisins ne comportent pas la même couleur
 			for (unsigned int i = 0; i < this->verticesSet.size(); ++i)
 			{
 				for(unsigned int j = 0; j < this->verticesSet[i]->getNeighbors().size(); ++j)
 				{
+					fichier << "c ** Arrête entre les sommets " << this->verticesSet[i]->getId() << " et " << this->verticesSet[i]->getNeighbors()[j]->getId() << " **" << std::endl;
 					for(unsigned int k = 1; k <= nbColors; ++k)
 					{
-						std::string clause = "-" + toString(k) + toString(this->verticesSet[i]->getId()) +
-								" -" + toString(k) + toString(this->verticesSet[i]->getNeighbors()[j]->getId()) + " 0";
+						std::string prefixNumColors;
+						for(int l = 0; l < (toString(nbColors).length() - toString(k).length()); ++l)
+						{
+							prefixNumColors += "0";
+						}
+
+						std::string prefixNumVertex;
+						for(int l = 0; l < (3 - toString(this->verticesSet[i]->getId()).length()); ++l)
+						{
+							prefixNumVertex += "0";
+						}
+
+						std::string clause = "-" + prefixNumColors + toString(k) + prefixNumVertex + toString(this->verticesSet[i]->getId()) +
+								" -" + prefixNumColors +toString(k) + prefixNumVertex + toString(this->verticesSet[i]->getNeighbors()[j]->getId()) + " 0";
 						fichier << clause << std::endl;
 					}
 				}
@@ -437,5 +502,78 @@ void ColorationEngine::satReduc(unsigned int nbColors)
 	else
 		std::cerr << "Impossible d'ouvrir le fichier !" << std::endl;
 
+}
+
+void ColorationEngine::colorFromSat(unsigned int nbColors, std::string filePath)
+{
+	// Le fichier donné en paramètre comporte la solution trouvée par Minisat
+	//
+
+	std::ifstream fichier(filePath.c_str(), std::ios::in);
+
+	if (fichier)
+	{
+		std::string ligne;
+		int i = 0;
+		while(getline(fichier, ligne))
+		{
+			if (i == 1)
+			{
+				// On lit séparément chaque variable
+				std::string val;
+				std::stringstream stream(ligne);
+				while(getline(stream, val, ' '))
+				{
+					if (val != "" && val[0] != '-' && val != "0")
+					{
+						// Une variable représentant le sommet 12 avec la couleur 5 peut être écrite 5012, 05012 ou encore  005012 ... (voir explications satReduc() )
+						// Or MiniSat supprime les 0 au début de chaque variable, mais il est très important de garder le même nombre de chiffre codant une couleur
+						// Nous comblons donc le les 0 supprimés par MiniSat
+						for(int j = 0; j < ( (toString(nbColors).length() + 3) - val.length()); ++j)
+						{
+							val.insert(0, "0");
+						}
+
+						// on extrait le numéro de couleur et l'identifiant du sommet
+						std::string color = val.substr(0, toString(nbColors).length());
+						std::string idVertex = val.substr(toString(nbColors).length(), val.length());
+
+						std::cout << "vertex : " << idVertex << " , color : " << color << std::endl;
+
+						// On supprime les zéros inutiles aux identifiants des sommets
+						std::string vertex;
+						if(idVertex[0] == '0' && idVertex[1] == '0')
+						{
+							 vertex = idVertex.substr(2, idVertex.length());
+						}
+						else if(idVertex[0] == '0' && idVertex[1] != '0')
+						{
+							vertex = idVertex.substr(1, idVertex.length());
+						}
+						else
+						{
+							vertex = idVertex;
+						}
+
+						// On assigne les couleurs aux sommets
+						for (unsigned int i = 0; i < this->verticesSet.size(); ++i)
+						{
+							if(toString(this->verticesSet[i]->getId()) == vertex)
+							{
+								this->verticesSet[i]->setColor(atoi(color.c_str()));
+							}
+						}
+					}
+				}
+			}
+			++i;
+		}
+
+		fichier.close();
+	}
+	else
+	{
+		std::cerr << "Impossible d'ouvrir le fichier !" << std::endl;
+	}
 }
 
