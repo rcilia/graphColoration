@@ -405,7 +405,7 @@ void ColorationEngine::satReduc(unsigned int nbColors)
 	// La négation d'une variable est écrite avec le préfixe -
 
 	// On crée le fichier test.txt qui comportera les formules
-	std::ofstream fichier("test.txt", std::ios::out | std::ios::trunc);
+	std::ofstream fichier("input.txt", std::ios::out | std::ios::trunc);
 
 	if(fichier)
 	{
@@ -518,6 +518,9 @@ void ColorationEngine::satReduc(unsigned int nbColors)
 			}
 
 			fichier.close();
+
+			std::cout << "Le fichier input.txt a été créé. Il contient les formules de la réduction vers SAT" << std::endl;
+			std::cout << "Vous devez utiliser MiniSat à partir de ce fichier afin de déterminer si le problème est satisfaisable" << std::endl;
 	}
 	else
 		std::cerr << "Impossible d'ouvrir le fichier !" << std::endl;
