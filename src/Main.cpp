@@ -17,27 +17,28 @@ int main() {
 
 	std::cout << "fini ! " << std::endl ;*/
 
-	Graph graph = Graph("tests/graphe12");
+	Graph graph = Graph("tests/graphe10");
 
-	//Graph graph = Graph();
-	//graph.generateRandomKcoloriableGraph(4, 50, 4);
+	/*Graph graph = Graph();
+	graph.generateRandomKcoloriableGraph(4, 50, 4);*/
 
-	graph.exportGraph();
+	//graph.exportGraph();
 
 	std::cout << "avant : " << std::endl;
 	std::cout << graph << std::endl;
 
 	ColorationEngine ce = ColorationEngine(&graph);
 
-	ce.nochoiceAlgorithm(10);
+	int coloredVertices = ce.nochoiceAlgorithm(4);
 	//ce.satReduc(3);
-
 
 	//int usedColors = ce.greedyAlgorithm();
 	//std::cout << "nombre de couleurs utilisées : " << usedColors << std::endl;
 
 	std::cout << "après : " << std::endl;
 	std::cout << graph << std::endl;
+
+	std::cout << "Sommets coloriés : " << coloredVertices << std::endl;
 
 	/*Graph graph = Graph();
 	graph.generateRandomKcoloriableGraph(4, 75, 4);

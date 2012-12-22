@@ -62,7 +62,7 @@ int ColorationEngine::greedyAlgorithm()
 }
 
 // Backtrack Algorithm
-void ColorationEngine::backtrackAlgorithm(unsigned int nbColors)
+bool ColorationEngine::backtrackAlgorithm(unsigned int nbColors)
 {
 	// On commence par vider la pile, au cas où elle ne le serait pas déjà
 	while (!this->verticesStack.empty())
@@ -107,16 +107,6 @@ void ColorationEngine::backtrackAlgorithm(unsigned int nbColors)
 		currentColor = currentVertex->getNextAvailableColor();
 		if (currentColor != 0)
 		{
-
-			/*std::set<unsigned int>::iterator it = currentColors.begin() ;
-			for (it ; it != currentColors.end() ; it ++)
-			{
-				std::cout << *it << std::endl;
-			}
-			std::cout << std::endl;*/
-
-
-
 			if (!currentVertex->are_neighbors_colored(currentColor))
 			{
 				verticesStack.pop();
@@ -159,17 +149,20 @@ void ColorationEngine::backtrackAlgorithm(unsigned int nbColors)
 	if (result.empty())
 	{
 		std::cout << "pas de solution" << std::endl;
+		return false;
 	}
 	else
 	{
 		std::cout << "solution trouvée" << std::endl;
+		return true;
 	}
 }
 
 // No Choice Algorithm
-void ColorationEngine::nochoiceAlgorithm(int nbColors)
+int ColorationEngine::nochoiceAlgorithm(int nbColors)
 {
 	this->nbColors = nbColors;
+	int coloredVertices = 0;
 
 	// On commence par vider la pile, au cas où elle ne le serait pas déjà
 	while (!this->verticesStack.empty())
@@ -179,8 +172,11 @@ void ColorationEngine::nochoiceAlgorithm(int nbColors)
 
 	// recherche de la plus grande clique
 	std::vector<Vertex*> clique = searchClique();
-	colorCliqueAndNeighbors(clique);
-	coloringOneColorLeftVertices();
+	std::cout << "taille clique : " << clique.size() << std::endl;
+	coloredVertices += colorCliqueAndNeighbors(clique);
+	coloredVertices += coloringOneColorLeftVertices();
+
+	return coloredVertices;
 }
 
 std::vector<Vertex*> ColorationEngine::searchClique()
@@ -196,49 +192,36 @@ std::vector<Vertex*> ColorationEngine::searchClique()
 		highestDegreeVertex = getHighestDegreeVertex(vertices);
 
 		// On l'ajoute à la clique
-		clique.push_back(highestDegreeVertex);
-
-		// On supprime de la liste des sommets tous ceux qui ne sont pas voisin
-		// du sommet de plus haut degrès
-		neighbors = std::vector<Vertex*>(highestDegreeVertex->getNeighbors());
-		for (std::vector<Vertex*>::iterator it = neighbors.begin() ; it != neighbors.end() ; ++it)
+		if (!vertexVectorContains(clique, highestDegreeVertex))
 		{
-			for (std::vector<Vertex*>::iterator it2 = vertices.begin() ; it2 != vertices.end() ; ++it2)
-			{
-				if ((*it)->getId() != (*it2)->getId())
-				{
-					vertices.erase(it2);
-					break;
-				}
-			}
+			clique.push_back(highestDegreeVertex);
 		}
+
+		// On garde dans la liste seulement ceux qui sont voisins
+		// avec le sommet de plus haut degrès
+		retainAll(vertices, highestDegreeVertex->getNeighbors());
 	}
 
 	return clique;
 }
 
-void ColorationEngine::colorCliqueAndNeighbors(std::vector<Vertex*> clique)
+int ColorationEngine::colorCliqueAndNeighbors(std::vector<Vertex*> clique)
 {
+	int coloredVertices = 0;
+
 	std::vector<Vertex*> vertices = std::vector<Vertex*>(this->verticesSet);
 
 	// On colorie chaque sommet de la clique d'une couleur différente
 	for (std::vector<Vertex*>::iterator it = clique.begin() ; it != clique.end() ; ++it)
 	{
-		(*it)->setColor(this->getNextColor());
+		if ((*it)->getColor() == 0) {
+			(*it)->setColor(this->getNextColor());
+			++coloredVertices;
+		}
 	}
 
 	// On supprime de la liste des sommets tous ceux qui sont dans la clique
-	for (std::vector<Vertex*>::iterator it = clique.begin() ; it != clique.end() ; ++it)
-	{
-		for (std::vector<Vertex*>::iterator it2 = vertices.begin() ; it2 != vertices.end() ; ++it2)
-		{
-			if ((*it)->getId() == (*it2)->getId())
-			{
-				vertices.erase(it2);
-				break;
-			}
-		}
-	}
+	removeAll(vertices, clique);
 
 	// On ajoute toutes les couleurs disponibles aux sommets restants dans la liste
 	std::set<unsigned int> colors = std::set<unsigned int>();
@@ -246,29 +229,18 @@ void ColorationEngine::colorCliqueAndNeighbors(std::vector<Vertex*> clique)
 	{
 		colors.insert(i);
 	}
-
 	for (std::vector<Vertex*>::iterator it = vertices.begin() ; it != vertices.end() ; ++it)
 	{
 		(*it)->setAvailableColors(colors);
 	}
 
-
+	// Pour chaque élément de la clique...
 	for (std::vector<Vertex*>::iterator it = clique.begin() ; it != clique.end() ; ++it)
 	{
 		std::vector<Vertex*> adj = std::vector<Vertex*>((*it)->getNeighbors());
 
 		// On supprime de la liste des voisins tous ceux qui sont dans la clique
-		for (std::vector<Vertex*>::iterator itClique = clique.begin() ; itClique != clique.end() ; ++itClique)
-		{
-			for (std::vector<Vertex*>::iterator it2 = adj.begin() ; it2 != adj.end() ; ++it2)
-			{
-				if ((*itClique)->getId() == (*it2)->getId())
-				{
-					adj.erase(it2);
-					break;
-				}
-			}
-		}
+		removeAll(adj, clique);
 
 		for (std::vector<Vertex*>::iterator itAdj = adj.begin() ; itAdj != adj.end() ; ++itAdj)
 		{
@@ -281,18 +253,25 @@ void ColorationEngine::colorCliqueAndNeighbors(std::vector<Vertex*> clique)
 		}
 
 	}
+
+	return coloredVertices;
 }
 
-void ColorationEngine::coloringOneColorLeftVertices()
+int ColorationEngine::coloringOneColorLeftVertices()
 {
+	int coloredVertices = 0;
 	Vertex * currentVertex = NULL;
 
 	while (!verticesStack.empty())
 	{
 		currentVertex = verticesStack.top();
 		verticesStack.pop();
-		currentVertex->setColor(*(currentVertex->getAvailableColors().begin()));
-		currentVertex->getAvailableColors().clear();
+
+		if (currentVertex->getColor() == 0) {
+			currentVertex->setColor(*(currentVertex->getAvailableColors().begin()));
+			++coloredVertices;
+			currentVertex->getAvailableColors().clear();
+		}
 
 		// Pour chaque voisin du sommet qu'on vient de colorier,
 		// On enlève la couleur de ce sommet à la liste des couleurs
@@ -313,6 +292,8 @@ void ColorationEngine::coloringOneColorLeftVertices()
 			}
 		}
 	}
+
+	return coloredVertices;
 }
 
 Vertex* ColorationEngine::getHighestDegreeVertex(std::vector<Vertex*> vertices)
@@ -328,7 +309,7 @@ Vertex* ColorationEngine::getHighestDegreeVertex(std::vector<Vertex*> vertices)
 		}
 		else
 		{
-			if ((vertices[i]->getNeighbors().size() > toReturn->getNeighbors().size()))
+			if ( vertices[i]->getNeighbors().size() > toReturn->getNeighbors().size() )
 			{
 				toReturn = vertices[i];
 			}
@@ -367,6 +348,45 @@ bool ColorationEngine::vertexStackContains(std::stack<Vertex*> s, Vertex* v)
 	return contains;
 }
 
+bool ColorationEngine::vertexVectorContains(std::vector<Vertex*> vector, Vertex* v)
+{
+	bool contains = false;
+
+	for (std::vector<Vertex*>::iterator it = vector.begin() ; it != vector.end() ; ++it)
+	{
+		if ((*it)->getId() == v->getId())
+		{
+			contains = true;
+			break;
+		}
+	}
+
+	return contains;
+}
+
+void ColorationEngine::retainAll(std::vector<Vertex*>& vector, std::vector<Vertex*> toRetain)
+{
+	for (std::vector<Vertex*>::iterator it = vector.begin() ; it != vector.end() ; ++it)
+	{
+		if (!vertexVectorContains(toRetain, (*it)))
+		{
+			vector.erase(it);
+			break;
+		}
+	}
+}
+
+void ColorationEngine::removeAll(std::vector<Vertex*>& vector, std::vector<Vertex*> toRemove)
+{
+	for (std::vector<Vertex*>::iterator it = vector.begin() ; it != vector.end() ; ++it)
+	{
+		if (vertexVectorContains(toRemove, (*it)))
+		{
+			vector.erase(it);
+			break;
+		}
+	}
+}
 
 std::string toString(const int nb)
 {
